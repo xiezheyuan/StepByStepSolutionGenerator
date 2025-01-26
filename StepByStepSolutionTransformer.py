@@ -6,23 +6,8 @@ import streamlit as st
 import os
 
 # 填写你自己的私钥和公钥（注意：这里要手动填写）
-private_key_pem = b"""
------BEGIN RSA PRIVATE KEY-----
-MIIBPQIBAAJBALVpNcw7JAx4r0d8e9YkLjQ5AcaeZAdvo6PEZN5ZdwFI6ccQCafj
-x+zCK/tzuLTuRbZUqCQoSVawLoFl9xtpxoMCAwEAAQJAKus+SBhB2hV/WolP/wTG
-TaKjEeuNPNkjvO4M8zH1K0gFb0hFQiQG25Nd9V8beEnDdB0pmdPSniFznA+vdQnP
-SQIjANmKSL1NHrzkcWRs1C7rcZw6/lDUjnqAipOU377tM1WUit8CHwDVe75yUbwG
-ZWAJ7FR/oyphrPByU0tJYIiHzCoynN0CIkuiervmjmNagdpKxFMz5SJOmJF99bO9
-8XByeICndAuzQ70CHwCbKKTyUZVm0KdMjwea/OwAscDQVtmRKygQCsNgpcECIwC6
-QgKnXdYMFk07dnEpINcWdDp/ch7RBiODB9EUHeUN1WRM
------END RSA PRIVATE KEY-----
-"""
-public_key_pem = b"""
------BEGIN RSA PUBLIC KEY-----
-MEgCQQC1aTXMOyQMeK9HfHvWJC40OQHGnmQHb6OjxGTeWXcBSOnHEAmn48fswiv7
-c7i07kW2VKgkKElWsC6BZfcbacaDAgMBAAE=
------END RSA PUBLIC KEY-----
-"""
+private_key_pem = st.secrets["private_key"].encode()
+public_key_pem = st.secrets["public_key"].encode()
 
 # 加载私钥和公钥
 private_key = rsa.PrivateKey.load_pkcs1(private_key_pem)
