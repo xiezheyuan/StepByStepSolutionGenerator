@@ -69,22 +69,29 @@ JSON 表达示例：
 ===
 """
 
+def remove_upprintable_chars(s):
+    """移除所有不可见字符"""
+    return ''.join(x for x in s if x.isprintable())
+
 # 修改后的API请求函数
 def get_custom_api_tips(base_url, api_key, params, text):
-    headers = {'Authorization': f'Bearer {api_key}'}
+    headers = {'Authorization': remove_upprintable_chars(f'Bearer {api_key}')}
     payload = {
         "model": params['engine'],
         "messages": [{"role": "user", "content": text}],
         "max_tokens": params['max_tokens'],  # 新增参数
         "temperature": params['temperature']  # 新增参数
     }
+    base_url = remove_upprintable_chars(base_url)
     try:
+        print("hello 2")
         response = requests.post(
             f"{base_url}/v1/chat/completions",
             headers=headers,
             json=payload,
-            timeout=30  # 添加超时处理
+            timeout=60  # 添加超时处理
         )
+        print("hello 1")
         if response.status_code == 200:
             result = response.json()["choices"][0]["message"]["content"]
             result = result.strip().rstrip()
@@ -113,6 +120,8 @@ def get_custom_api_tips(base_url, api_key, params, text):
 with st.sidebar:
     st.header("🛠️ 配置中心")
 
+    st.write("为了保证您正确保存了配置文件，我们只会使用已经加载的配置文件的信息，而不会使用您输入的任何信息。")
+
     # ===== 配置文件上传 =====
     uploaded_config = st.file_uploader("上传配置文件", type=["json"],
                                      help="支持包含加密API密钥的配置文件")
@@ -137,7 +146,7 @@ with st.sidebar:
             st.session_state.llm_config.update({
                 'base_url': config.get('base_url', st.session_state.llm_config['base_url']),
                 'engine': config.get('engine', st.session_state.llm_config['engine']),
-                'api_key': decrypt_data(base64.b64decode(config['api_key']), private_key),
+                'api_key': decrypt_data(base64.b64decode(remove_upprintable_chars(config['api_key'])), private_key),
                 'max_tokens': config.get('max_tokens', 5000),
                 'temperature': config.get('temperature', 0.7),
                 'prompt': config.get('prompt', prompt)  # 新增prompt加载
@@ -236,36 +245,39 @@ if st.button("🚀 生成分步解析", type="primary"):
 
 # 分步显示逻辑
 if "tips" in st.session_state:
-    current_step = st.session_state.show_step
-    total_steps = len(st.session_state.tips)
+    try:
+        current_step = st.session_state.show_step
+        total_steps = len(st.session_state.tips)
 
-    # 当前步骤内容（直接显示原始内容）
-    st.markdown("---")
-    st.markdown(st.session_state.tips[current_step])  # 直接显示Markdown内容
+        # 当前步骤内容（直接显示原始内容）
+        st.markdown("---")
+        st.markdown(st.session_state.tips[current_step])  # 直接显示Markdown内容
 
-    # 分步控制按钮
-    col1, col2, _ = st.columns([2, 2, 6])  # 调整比例使按钮靠左
-    with col1:
-        # 上一步按钮（始终显示，根据状态禁用）
-        st.button(
-            "← 上一步",
-            disabled=(current_step <= 0),
-            key="prev",
-            on_click=lambda: st.session_state.update(show_step=current_step-1)
-        )
-    with col2:
-        # 下一步按钮（始终显示，根据状态禁用）
-        next_disabled = current_step >= total_steps - 1
-        btn_label = "完成 ✅" if next_disabled else "→ 下一步"
-        st.button(
-            btn_label,
-            disabled=next_disabled,
-            key="next",
-            on_click=lambda: st.session_state.update(show_step=current_step+1)
-        )
+        # 分步控制按钮
+        col1, col2, _ = st.columns([2, 2, 6])  # 调整比例使按钮靠左
+        with col1:
+            # 上一步按钮（始终显示，根据状态禁用）
+            st.button(
+                "← 上一步",
+                disabled=(current_step <= 0),
+                key="prev",
+                on_click=lambda: st.session_state.update(show_step=current_step-1)
+            )
+        with col2:
+            # 下一步按钮（始终显示，根据状态禁用）
+            next_disabled = current_step >= total_steps - 1
+            btn_label = "完成 ✅" if next_disabled else "→ 下一步"
+            st.button(
+                btn_label,
+                disabled=next_disabled,
+                key="next",
+                on_click=lambda: st.session_state.update(show_step=current_step+1)
+            )
 
-    # 自动显示进度（不显式调用rerun）
-    st.progress((current_step + 1) / total_steps)
+        # 自动显示进度（不显式调用rerun）
+        st.progress((current_step + 1) / total_steps)
+    except:
+        pass
 
 st.markdown("---")
 st.markdown(
@@ -275,3 +287,4 @@ st.markdown(
     </div>""",
     unsafe_allow_html=True
 )
+
